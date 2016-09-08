@@ -3,15 +3,23 @@
 FROM debian:jessie
 MAINTAINER Michal Kubenka <mkubenka@gmail.com>
 
-RUN VERSION=0.5.0 \
-    && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -qq update \
-    && apt-get -y install wget ca-certificates \
-    && wget https://github.com/bosun-monitor/bosun/releases/download/$VERSION/bosun-linux-amd64 -O /usr/local/bin/bosun -nv \
-    && chmod +rx /usr/local/bin/bosun \
-    && apt-get -y purge --auto-remove wget \
-    && apt-get clean \
+RUN apt-get update && apt-get install -y \
+        curl \
+        git \
+        ca-certificates \
+        --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
+
+ENV GOPATH /go
+ENV PATH $PATH:/usr/local/go/bin:$GOPATH/bin
+
+RUN curl -SL https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz \
+    | tar -xzC /usr/local
+
+RUN mkdir -p $GOPATH/src \
+    && git clone https://github.com/bosun-monitor/bosun $GOPATH/src/bosun.org \
+    && cd $GOPATH/src/bosun.org \
+    && go run build/build.go
 
 WORKDIR /data
 
